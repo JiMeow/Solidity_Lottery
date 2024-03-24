@@ -146,9 +146,6 @@ contract Lottery is CommitReveal {
             block.timestamp > startTime + t1 + t2 + t3,
             "This game is not in stage4(player withdraw)."
         );
-        if (reward == 0) {
-            resetGame();
-        }
 
         require(player_commit[msg.sender] != 0);
         player_commit[msg.sender] = 0;
@@ -156,6 +153,10 @@ contract Lottery is CommitReveal {
         reward -= 0.001 ether;
         address payable payAddress = payable(msg.sender);
         payAddress.transfer(0.001 ether);
+
+        if (reward == 0) {
+            resetGame();
+        }
     }
 
     function resetGame() private {
