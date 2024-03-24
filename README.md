@@ -66,9 +66,9 @@
 
 ### Stage 4 (player_withdraw):
 1. Check if the game is in stage 4 (player_withdraw).
-2. Check if the player already join the game.
-3. Set the player commit value to `0`. (to prevent double withdraw).
-4. Assert the reward is not empty. (to prevent error).
+2. If reward is empty, call the `resetGame` function. (this also function work as a reset game).
+3. Check if the player already join the game.
+4. Set the player commit value to `0`. (to prevent double withdraw).
 5. Transfer the reward to the player.
 6. Call the `resetGame` function if the reward is empty.
 ---
