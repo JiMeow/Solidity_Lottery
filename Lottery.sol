@@ -94,7 +94,7 @@ contract Lottery is CommitReveal {
         player_value[msg.sender] = value;
     }
 
-    function find_winner() public payable {
+    function find_winner() public {
         require(
             block.timestamp > startTime + t1 + t2 &&
                 block.timestamp <= startTime + t1 + t2 + t3,
