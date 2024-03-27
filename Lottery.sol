@@ -14,10 +14,12 @@ contract Lottery is CommitReveal {
 
     uint private startTime = 0;
     uint public reward = 0;
+    uint public owner_reward = 0;
 
     mapping(address => bytes32) private player_commit;
     mapping(uint => address) private player_address;
     mapping(address => uint) private player_value;
+    mapping(address => bool) private player_reveal;
 
     bool is_game_finish = false;
 
@@ -92,6 +94,7 @@ contract Lottery is CommitReveal {
         require(new_hashed == hashed, "This is not your real value.");
 
         player_value[msg.sender] = value;
+        player_reveal[msg.sender] = true;
     }
 
     function find_winner() public {
@@ -111,7 +114,11 @@ contract Lottery is CommitReveal {
 
         for (uint i = 0; i < num_player; i++) {
             address addr = player_address[i];
-            if (player_value[addr] >= 0 && player_value[addr] <= 999) {
+            if (
+                player_value[addr] >= 0 &&
+                player_value[addr] <= 999 &&
+                player_reveal[addr]
+            ) {
                 valid_player += 1;
                 winner ^= player_value[addr];
             }
@@ -121,7 +128,11 @@ contract Lottery is CommitReveal {
             winner %= valid_player;
             for (uint i = 0; i < num_player; i++) {
                 address addr = player_address[i];
-                if (player_value[addr] >= 0 && player_value[addr] <= 999) {
+                if (
+                    player_value[addr] >= 0 &&
+                    player_value[addr] <= 999 &&
+                    player_reveal[addr]
+                ) {
                     if (winner == 0) {
                         winnerAddr = addr;
                         break;
@@ -132,10 +143,24 @@ contract Lottery is CommitReveal {
             }
         }
 
+        for (uint i = 0; i < num_player; i++) {
+            address playerAddr = player_address[i];
+            if (
+                (player_value[playerAddr] < 0 ||
+                    player_value[playerAddr] > 999) && player_reveal[playerAddr]
+            ) {
+                reward -= 0.001 ether;
+                address payable payAddress = payable(playerAddr);
+                player_commit[playerAddr] = 0;
+                payAddress.transfer((0.001 ether * 98) / 100);
+                owner_reward += (0.001 ether * 2) / 100;
+            }
+        }
+
         address payable ownerAddress = payable(owner);
         address payable winnerAddress = payable(winnerAddr);
 
-        ownerAddress.transfer((reward * 2) / 100);
+        ownerAddress.transfer((reward * 2) / 100 + owner_reward);
         winnerAddress.transfer((reward * 98) / 100);
 
         resetGame();
@@ -165,11 +190,13 @@ contract Lottery is CommitReveal {
             player_address[i] = address(0);
             player_commit[playerAddr] = 0;
             player_value[playerAddr] = 0;
+            player_reveal[playerAddr] = false;
         }
 
         is_game_finish = false;
         num_player = 0;
         reward = 0;
+        owner_reward = 0;
         startTime = 0;
     }
 }
